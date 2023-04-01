@@ -1,0 +1,117 @@
+#gemtd {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+
+}
+
+#gemtd * {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+}
+
+.t-tablero {
+    min-width: 1.110px;
+    min-height: 1.110px;
+    /* margin:  10% 32% 18% 32%; */
+    background-color: rgb(243, 19, 190);
+    border-style: groove;
+    border-width: 15px;
+    user-select: none;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+
+    margin-left: 30px;
+    margin-top: 30px;
+}
+
+
+.t-row {
+    min-height: 30px;
+    position: relative;
+    margin: unset;
+    padding-inline-start: unset;
+    display: flex;
+    list-style: none;
+    flex-direction: row;
+}
+
+.t-tile  {
+      min-width: 30px;
+      min-height: 30px;
+      background-color: rgb(124, 176, 143);
+      list-style: none;
+}
+
+.t-checked {
+    background-color:  rgb(44, 71, 54);
+}
+
+.t-stone {
+    background-color:  rgb(63, 63, 63);
+}
+
+.t-steps {
+    background-color:  rgb(205, 226, 44);
+}
+
+.t-flag {
+    background-color:  rgb(225, 40, 40);
+}
+
+.t-topaz {
+    background-color:  rgb(193, 140, 6);
+}
+
+.t-opal {
+    background-color:  rgb(21, 7, 47);
+}
+
+.t-emerald {
+    background-color:  rgb(13, 101, 23);
+}
+
+.t-sapphire {
+    background-color:  rgb(118, 208, 213);
+}
+
+.t-ruby {
+    background-color:  rgb(67, 13, 5);
+}
+
+.t-diamond {
+    background-color:  rgb(218, 218, 218);
+}
+
+.t-amethyst {
+    background-color:  rgb(89, 93, 16);
+}
+
+.t-aquamarine{
+    background-color:  rgb(191, 27, 194);
+}
+
+
+/* 
+.t-i{
+    background-image: url( /assets/casilla-i.svg );
+} */
+
+.t-start, .t-resume {
+    height: 70px;
+    margin-top: 50px;
+    width: 180px;
+    margin-left: 1200px;
+    z-index: 30;
+}
+
+.t-pause {
+    width: 80px;
+    height: 50px;
+    margin-left: 500px;
+    z-index: 30;
+    margin-top: 20px;
+}
+

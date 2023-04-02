@@ -11,12 +11,13 @@ import Gem exposing (Gem, cssClass)
 import Html.Events exposing (onClick)
 import Random
 
-import Gem exposing (gemGenerator)
+import Gem exposing (BasicGem(..), AdvancedGem(..), Gem(..), gemGenerator)
+import Array exposing (length)
 
 
 type alias Model = 
     {
-        tablero : Matrix Tile
+          tablero : Matrix Tile
         , level : Int
     }
 
@@ -47,7 +48,7 @@ init : Int -> Int -> Model
 init rows cols = 
     {
         tablero = Matrix.repeat rows cols <| Grass Empty 
-        ,level = 0
+        , level = 1
     }
 
 
@@ -109,7 +110,7 @@ viewTile isBuild tile rIndex cIndex =
             Grass cover -> 
                 case cover of 
                     Stone -> [("t-stone", True)]
-                    Gem tower -> [(cssClass tower.gem, True)]
+                    Gem tower -> [(cssClass tower.gem, True), ("t-gem", True)]
                     Empty -> []
         
         steps = if (isSteps rIndex cIndex) then [("t-steps", True)] else []
@@ -119,7 +120,6 @@ viewTile isBuild tile rIndex cIndex =
         classes = List.concat [
             [("t-tile", True)]
             , isChecked
-            , coveringElement
             , steps
             , flag
             ]
@@ -131,10 +131,19 @@ viewTile isBuild tile rIndex cIndex =
             
     in
         if buildable then
-            li [ Attrs.classList classes
-            , onClick <| Build rIndex cIndex] [ ]
+            if (List.length coveringElement) > 0 then
+                li [ Attrs.classList classes
+                , onClick <| Build rIndex cIndex] 
+                [ Html.div [Attrs.classList  coveringElement] [] ]
+            else
+                li [ Attrs.classList classes
+                , onClick <| Build rIndex cIndex] [ ]
         else
-            li [ Attrs.classList classes] [ ]
+            if (List.length coveringElement) > 0 then
+                li [ Attrs.classList classes] 
+                [ Html.div [Attrs.classList  coveringElement] [] ]
+            else
+                li [ Attrs.classList classes] [ ]
 
 
 isHouse : Int -> Int -> Bool

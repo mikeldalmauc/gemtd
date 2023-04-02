@@ -1,6 +1,7 @@
 module Gem exposing (..)
 
 import Random
+import Debug exposing (toString)
 
 type BasicGem = 
       Topaz Level
@@ -35,16 +36,19 @@ gemGenerator heroLevel =
 
         -- Returns a pair of gem levl with a probability        
         mapper = \level prob-> 
-            List.map (\gem ->  (toFloat prob / 8, gem) )
-                [ Topaz level
-                , Opal level
-                , Emerald level
-                , Sapphire level
-                , Ruby level
-                , Diamond level
-                , Amethyst level
-                , Aquamarine level
-                ]
+            let
+                l = level + 1
+            in
+                List.map (\gem ->  (toFloat prob / 8, gem) )
+                    [ Topaz l
+                    , Opal l
+                    , Emerald l
+                    , Sapphire l
+                    , Ruby l
+                    , Diamond l
+                    , Amethyst l
+                    , Aquamarine l
+                    ]
 
         -- Taking the weights array and probability mapper
         -- generate all porbabilities, filter zeros
@@ -70,9 +74,24 @@ gemName pGem =
 
 
 cssClass : Gem -> String
-cssClass gem = 
-    "t-" ++ String.toLower (gemName gem)
+cssClass gem =
+    case gem of
+        Advanced g -> "t-" ++ (String.toLower (gemName gem))
+        Basic g -> "t-" ++ (toString <| getLevel g) ++ "-" ++ (String.toLower (gemName gem)) 
 
+    
+
+getLevel : BasicGem -> Int
+getLevel g = 
+    case g of 
+        Topaz l -> l
+        Opal  l -> l 
+        Emerald l -> l 
+        Sapphire l -> l 
+        Ruby l -> l
+        Diamond l -> l 
+        Amethyst l -> l 
+        Aquamarine l -> l 
 
 advancedGemName : AdvancedGem -> String
 advancedGemName gem = 

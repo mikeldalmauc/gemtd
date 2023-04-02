@@ -2,7 +2,7 @@ module Main exposing (main, Model, GameState)
 
 import Html exposing (Html, div, p, text, button)
 import Html.Attributes as Attrs 
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 import Set exposing (empty, insert, member)
 import Keyboard.Event exposing (KeyboardEvent, decodeKeyboardEvent)
 import Keyboard.Key as Key
@@ -13,7 +13,6 @@ import Json.Decode as Json
 import Process
 import Task
 import Random
-
 import Tablero
 
 import Gem 
@@ -21,7 +20,8 @@ import Time
 import Matrix
 import Array exposing (length)
 import Dict
-
+import SingleSlider exposing (SingleSlider)
+import String exposing (fromFloat)
 
 type alias Stats = 
     {
@@ -52,6 +52,9 @@ type Msg =
     | Pause Bool
     | None
     | TableroMsg Tablero.Msg 
+
+    -- Test
+    | SingleSliderChange Float
 
 
 init : ( Model, Cmd Msg )
@@ -96,7 +99,14 @@ update msg model =
                 (newModelTablero, tableroCmd) =  Tablero.update childMsg model.modelTablero
             in
                 ({ model | modelTablero = newModelTablero}, Cmd.map (\cmd -> TableroMsg cmd) tableroCmd)
-        
+
+        -- Test
+        SingleSliderChange newLevel -> 
+            let
+              newModelTablero = model.modelTablero  
+            in
+                ({ model | modelTablero = { newModelTablero | level = round newLevel}}, Cmd.none)
+            
 
 
              
@@ -125,9 +135,19 @@ view model =
         [ viewStartButton model.state
         , viewPauseButton model.state
         , Tablero.view model.isBuild model.modelTablero |> Html.map TableroMsg
+        , div [Attrs.class "t-slider"] [SingleSlider.view <| singleSlider model.modelTablero.level]
         ]
 
-
+singleSlider : Int -> SingleSlider Msg 
+singleSlider level =
+    SingleSlider.init
+        { min = 1
+        , max = 5
+        , value = toFloat level
+        , step = 1
+        , onChange = SingleSliderChange
+        }
+     
 viewStartButton : GameState -> Html Msg
 viewStartButton state = 
     case state of

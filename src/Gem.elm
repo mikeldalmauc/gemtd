@@ -73,6 +73,13 @@ gemName pGem =
         Advanced g -> advancedGemName g
 
 
+gemToString : Gem -> String
+gemToString gem = 
+    case gem of
+        Advanced g -> (String.toLower (gemName gem)) 
+        Basic g ->  (String.toLower (gemName gem))  ++ " " ++ (toString <| getLevel g)
+
+
 cssClass : Gem -> String
 cssClass gem =
     case gem of

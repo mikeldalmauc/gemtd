@@ -37,8 +37,6 @@ type alias Model =
 
       , pausedState : GameState
       , state: GameState
-      , isBuild : Bool
-
       , modelTablero : Tablero.Model
     }
 
@@ -64,7 +62,6 @@ init =
         , pausedState = NotStarted
         , state = NotStarted
         , stepTime = 1000.0
-        , isBuild = True
       }
     , Cmd.none
     )
@@ -134,7 +131,7 @@ view model =
         [Attrs.id "gemtd"]
         [ viewStartButton model.state
         , viewPauseButton model.state
-        , Tablero.view model.isBuild model.modelTablero |> Html.map TableroMsg
+        , Tablero.view model.modelTablero |> Html.map TableroMsg
         , div [Attrs.class "t-slider"] [SingleSlider.view <| singleSlider model.modelTablero.level]
         ]
 

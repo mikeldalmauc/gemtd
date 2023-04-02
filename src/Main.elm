@@ -20,7 +20,6 @@ import Time
 import Matrix
 import Array exposing (length)
 import Dict
-import SingleSlider exposing (SingleSlider)
 import String exposing (fromFloat)
 
 type alias Stats = 
@@ -52,7 +51,7 @@ type Msg =
     | TableroMsg Tablero.Msg 
 
     -- Test
-    | SingleSliderChange Float
+    | LevelChange String
 
 
 init : ( Model, Cmd Msg )
@@ -98,11 +97,14 @@ update msg model =
                 ({ model | modelTablero = newModelTablero}, Cmd.map (\cmd -> TableroMsg cmd) tableroCmd)
 
         -- Test
-        SingleSliderChange newLevel -> 
+        LevelChange newLevel -> 
             let
-              newModelTablero = model.modelTablero  
+              newModelTablero = model.modelTablero
+              leveli =  case String.toInt newLevel of
+                Nothing -> 0
+                Just i -> i
             in
-                ({ model | modelTablero = { newModelTablero | level = round newLevel}}, Cmd.none)
+                ({ model | modelTablero = { newModelTablero | level = leveli}}, Cmd.none)
             
 
 
@@ -132,18 +134,21 @@ view model =
         [ viewStartButton model.state
         , viewPauseButton model.state
         , Tablero.view model.modelTablero |> Html.map TableroMsg
-        , div [Attrs.class "t-slider"] [SingleSlider.view <| singleSlider model.modelTablero.level]
+        , div [Attrs.class "t-slider"] [singleSlider model.modelTablero.level]
         ]
 
-singleSlider : Int -> SingleSlider Msg 
+
+singleSlider : Int -> Html Msg
 singleSlider level =
-    SingleSlider.init
-        { min = 1
-        , max = 5
-        , value = toFloat level
-        , step = 1
-        , onChange = SingleSliderChange
-        }
+    Html.input
+        [ Attrs.type_"number"
+        , Attrs.min "0"
+        , Attrs.max "100"
+        , Attrs.value <| toString level
+        , onInput LevelChange 
+        ]
+        []
+
      
 viewStartButton : GameState -> Html Msg
 viewStartButton state = 

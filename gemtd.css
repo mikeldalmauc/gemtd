@@ -168,8 +168,7 @@
 .t-info {
     overflow:visible;
     background:none !important;
-    position: fixed;
-    bottom: 10%;
-    width: 100%;
-    left: 79%;
+    position: relative;
+
+    left: 1300px;
 }

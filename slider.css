@@ -8,7 +8,7 @@
   /* In the case of the double slider, each individual slider has it's width set to 100% of the parent element. Therefore, in order to set a fixed width, it is recommended to set it on the parent element and not override the width of the range slider. This is to ensure the flexibility of the component. */
   .input-range-container,
   .input-range {
-    width: 100%;
+    width: 300px;
   }
   
   .input-range,

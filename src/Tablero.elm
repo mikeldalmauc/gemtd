@@ -1,8 +1,8 @@
 module Tablero exposing (init, update, Model, Msg, view, fixTower)
 
-import Html exposing (Html, li, ul, div, text, button)
+import Html exposing (Html, li, ul, div, text, button, input)
 import Matrix exposing(Matrix)
-import Html.Attributes as Attrs exposing (class)
+import Html.Attributes as Attrs exposing (class, min, max, value, type_)
 import Array exposing (toList, Array)
 import List
 import Debug exposing (toString)
@@ -14,6 +14,7 @@ import Task
 import Gem exposing (BasicGem(..), AdvancedGem(..), Gem(..), gemGenerator, gemToString)
 import Array exposing (length)
 import Gem exposing (getLevel)
+import Html exposing (p)
 
 
 
@@ -259,14 +260,64 @@ viewTower  model =
                         ]
 
 {-
-
+    A esta función hay que llamarla como test antes de cada insert
 
 -}
-calcularCamino : Model -> Maybe List Coords
+calcularCamino : Model -> Maybe (List (Int, Int))
 calcularCamino model = 
-    Matrix.model.tablero
+    let
+        passingPoints =  List.append ((4,4) :: flags) [(32, 32)]
+        
+        (sizeX, sizeY) = Matrix.size model.tablero
+
+        pairs = Dict.fromList
+            <| List.concatMap (\xi -> List.map (\yi -> ( (10 * xi + yi), (xi, yi))) <| List.range 0 sizeY) 
+            <| List.range 0 sizeX
+            
+        uncovered = Dict.filter 
+            (\_ (xd, yd) ->
+                case (Matrix.get model.tablero xd yd) of 
+                    Nothing -> False
+                    Just tile -> case tile of 
+                        Empty -> True
+                        Stone -> False
+                        Gem _ -> False
+            ) 
+            pairs
+
+        pathPointsFree = List.all (\a -> Dict.member (toKey a) uncovered) passingPoints
+        -- The uncovered
+
+        vecinos = \mx my -> 
+            let 
+                xIndexes = if mx == 0 then [0,1] else if mx == sizeX then [0, -1] else [-1, 0, 1]
+                yIndexes = if my == 0 then [0,1] else if my == sizeY then [0, -1] else [-1, 0, 1]
+            in
+                List.filter (\(xi, yi) -> Dict.member (toKey (xi, yi)) uncovered)
+                <| List.filter (\(xi, yi) -> xi == mx && yi == mx) 
+                <| List.concatMap (\xi -> List.map (\yi -> (xi + mx, yi + my)) yIndexes ) xIndexes
+            
+
+        adjacencies = 
+            Dict.map (\key (px, py) -> 
+                ((px, py), vecinos px py)
+                ) 
+            uncovered
+
+            
+        -- Flags occupied
+    
+        -- path = \pOrigin pDestin model.tablero -> 
+    in 
+        if pathPointsFree then
+            Nothing
+            
+        else
+            Nothing
 
 
+toKey : (Int, Int) -> Int
+toKey (x, y) = 10 * x + y
 
 isHouse : Int -> Int -> Bool
 isHouse x y =
@@ -287,8 +338,26 @@ isSteps x y =
 isFlag : Int -> Int -> Bool 
 isFlag x y = List.any (\ (fx, fy) -> fx == x && fy == y ) flags
 
-flags : List (x, y)
-flags = [ (19, 4) , (19, 32) , (4, 32) , (4, 18) , (32, 18)]
+
+flags : List (Int, Int)
+flags = [(19, 4), (19, 32), (4, 32), (4, 18), (32, 18)]
+
+
+flagIndex : (Int, Int) -> Int
+flagIndex flag = 
+    let
+        helper idx lst =
+            case lst of
+                [] ->
+                    0
+
+                x :: xs ->
+                    if x == flag then
+                        idx
+                    else
+                        helper (idx + 1) xs
+    in
+        helper 0 flags
 
 viewHouse : Html msg
 viewHouse = 

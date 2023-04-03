@@ -87,6 +87,12 @@ cssClass gem =
         Basic g -> "t-" ++ (toString <| getLevel g) ++ "-" ++ (String.toLower (gemName gem)) 
 
     
+scaleClass : Gem -> String
+scaleClass gem =  
+    case gem of
+        Advanced _ -> ""
+        Basic g -> "t-s-" ++ (toString <| getLevel g)
+
 
 getLevel : BasicGem -> Int
 getLevel g = 

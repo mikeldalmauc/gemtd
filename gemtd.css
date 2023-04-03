@@ -89,7 +89,6 @@
     height: 100%;
     scale: 1.5;
     margin-bottom: 3px;
-
 }
 
 .t-gem {
@@ -123,7 +122,10 @@
 }
 
 .t-1-ruby, .t-2-ruby, .t-3-ruby, .t-4-ruby, .t-5-ruby, .t-6-ruby  {
-    background-color:  rgb(67, 13, 5);
+    background-image: url( /assets/ruby.svg );
+    height: 100%;
+    scale: 1.4;    
+    padding-bottom: 10px;
 }
 
 .t-1-diamond, .t-2-diamond, .t-3-diamond, .t-4-diamond, .t-5-diamond, .t-6-diamond {
@@ -138,13 +140,34 @@
     background-color:  rgb(191, 27, 194);
 }
 
+.t-s-1 {
+    scale: 1.3;
+}
 
+.t-s-2 {
+    scale: 1.6;
+}
+.t-s-3 {
+    scale: 1.9;
+}
+
+.t-s-4 {
+    scale: 2.7;
+}
+
+.t-s-5 {
+    scale: 3.4;
+}
+
+.t-s-6{
+    scale: 4;
+}
 /* 
 .t-i{
     background-image: url( /assets/casilla-i.svg );
 } */
 
-.t-start, .t-resume {
+.t-start, .t-resume, .t-ps-toggle{
     height: 70px;
     margin-top: 50px;
     width: 180px;

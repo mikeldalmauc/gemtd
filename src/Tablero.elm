@@ -11,17 +11,20 @@ import Gem exposing (Gem, cssClass, gemName)
 import Html.Events exposing (onClick)
 import Random
 import Task
-import Gem exposing (BasicGem(..), AdvancedGem(..), Gem(..), gemGenerator, gemToString)
+import Gem exposing (BasicGem(..), AdvancedGem(..), Gem(..), gemGenerator, gemToString, scaleClass)
 import Array exposing (length)
 import Gem exposing (getLevel)
 import Html exposing (p)
 
+import PathSearch exposing (Model, Key)
 
 
 type alias Coords =
     { x : Int
     , y : Int
     }
+
+type alias Path =  List (Int, Int)
 
 type alias Tower = 
     {
@@ -48,6 +51,9 @@ type alias Model =
         , isBuild : Bool
         , wave : Int
         , selected : Maybe Tower
+        , modelPathSearch : PathSearch.Model
+        , paths: List Path
+        , viewPath : Bool
     }
 
 
@@ -57,7 +63,8 @@ type Msg =
     | Fix Tower
     | ShowInfo Tower
     | StartWave
-
+    | PathSearchMsg PathSearch.Msg
+    | ViewPath Bool
 
 init : Int -> Int -> Model
 init rows cols = 
@@ -69,15 +76,30 @@ init rows cols =
         , isBuild = True
         , wave = 0
         , selected = Nothing
+        , modelPathSearch = []
+        , viewPath = True
+        , paths = []
     }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg)
 update msg model =
     case msg of 
-        Build x y -> case (List.length model.buildingTowers) of 
-            4 -> ({model | isBuild = False} , newTower model.level x y)
-            _ -> (model, newTower model.level x y)
+        Build x y -> 
+            let
+                model_ =  { model | tablero = Matrix.set model.tablero x y Stone}
+                (newModel, validPath, paths) = testPath model_
+            in
+                -- Verify if path is not broken 
+                if validPath then
+                    let
+                        modelWithPaths =  {newModel | paths = paths}
+                    in
+                        case (List.length model.buildingTowers) of 
+                            4 -> ({modelWithPaths | isBuild = False}, newTower model.level x y )
+                            _ -> (modelWithPaths, newTower model.level x y  )
+                else 
+                    ({model_ | modelPathSearch = newModel.modelPathSearch}, Cmd.none)
 
         NewGem tower  -> 
             ( { model | tablero = Matrix.set model.tablero tower.coords.x tower.coords.y (Gem tower)
@@ -99,6 +121,14 @@ update msg model =
         ShowInfo tower -> 
             ( {model | selected = Just tower}, Cmd.none)
 
+        PathSearchMsg childMsg ->
+            let
+                (newModeloPathSearch, pathSCmd) =  PathSearch.update childMsg model.modelPathSearch
+            in
+                ({ model | modelPathSearch = newModeloPathSearch}, Cmd.map (\cmd -> PathSearchMsg cmd) pathSCmd)
+        
+        ViewPath toggle -> 
+                ({ model | viewPath = toggle}, Cmd.none)
 
 newTower : Int -> Int -> Int -> Cmd Msg
 newTower level x y  = 
@@ -136,15 +166,21 @@ view model =
     in
         Html.section 
             [Attrs.class "t-frame"]
-        [ Html.section 
-            [Attrs.class "t-tablero"]
-            <| List.concat [
-                List.map (\row -> viewRow model.isBuild (Matrix.getXs model.tablero row) row) (List.range 0 (x - 1))
-            ]
-        , Html.section 
-            [Attrs.class "t-info"]
-                [viewTower model]
-        ]
+            <| List.append
+                [ Html.section 
+                    [Attrs.class "t-tablero"]
+                    <| List.concat [
+                        List.map (\row -> viewRow model.isBuild (Matrix.getXs model.tablero row) row) (List.range 0 (x - 1))
+                    ]
+                , Html.section 
+                    [Attrs.class "t-info"]
+                        [viewTower model]
+                , viewPathSearchButton model.viewPath
+                ]
+                <|  if model.viewPath then
+                        [PathSearch.view model.modelPathSearch |> Html.map PathSearchMsg] 
+                    else []
+
 
 
 viewRow : Bool -> Array Tile -> Int -> Html Msg
@@ -176,7 +212,7 @@ viewTile isBuild tile rIndex cIndex =
         (coveringElement, notGem, maybeTower) =
             case tile of
                 Stone -> ([("t-stone", True)], True, Nothing) 
-                Gem tower -> ([(cssClass tower.gem, True), ("t-gem", True)], False, Just tower)
+                Gem tower -> ([(cssClass tower.gem, True), ("t-gem", True), (scaleClass tower.gem, True)], False, Just tower)
                 Empty -> ([], True, Nothing)
 
         buildable = 
@@ -257,25 +293,63 @@ viewTower  model =
                                 [ text <| "Speed: " ++ toString tower.speed ]
                             ]]
                         , selectButton
+                        ,        Dict.values 
+                                <| Dict.map (\k a -> ul [] 
+                                    <| List.append [text <| toString k] 
+                                    <| List.map (\(wx, wy)-> li [][text <| (toString wx) ++ " " ++ (toString wy)]) a )  
+                                <| adjacencyList model
                         ]
+
+viewPathSearchButton : Bool -> Html Msg
+viewPathSearchButton state = 
+    if state then
+        button [onClick <| ViewPath (not state), Attrs.class "t-ps-toggle"] [ text "Disable PS view" ]
+    else
+        button [onClick <| ViewPath (not state),  Attrs.class "t-ps-toggle"] [ text "Enable PS view" ]
+
+
+pathPoint : List Key
+pathPoint = List.append ((4,4) :: flags) [(32, 32)]
+
+
+testPath : Model -> (Model, Bool, List Path)
+testPath model = 
+    let     
+        pointsAndAdjacent = adjacencyList model 
+        pathSData = model.modelPathSearch
+    in
+        let 
+            (pathsData, paths, _) = List.foldl 
+                (\p (mod, pPrev, nextItems)-> 
+                    case (List.head nextItems) of 
+                        Nothing ->  (mod, pPrev, [])
+                        Just head -> 
+                            let
+                                pathSearchExecutionResult = PathSearch.bfs (PathSearch.init pointsAndAdjacent) p head (Nothing, 0)
+                            in 
+                                case pathSearchExecutionResult.path of
+                                    Nothing -> ((pathSearchExecutionResult::mod), pPrev, Maybe.withDefault [] <| List.tail nextItems )
+                                    Just path -> ((pathSearchExecutionResult::mod), path::pPrev, Maybe.withDefault [] <| List.tail nextItems)
+                ) 
+                (pathSData, [], Maybe.withDefault [] <| List.tail pathPoint)
+                pathPoint
+        in
+            ({model | modelPathSearch = pathsData}, (List.length pathPoint) - 2 == (List.length paths), paths)
 
 {-
     A esta función hay que llamarla como test antes de cada insert
 
 -}
-calcularCamino : Model -> Maybe (List (Int, Int))
-calcularCamino model = 
-    let
-        passingPoints =  List.append ((4,4) :: flags) [(32, 32)]
-        
+adjacencyList : Model -> Dict (Int, Int) (List (Int, Int))
+adjacencyList model = 
+    let 
         (sizeX, sizeY) = Matrix.size model.tablero
 
-        pairs = Dict.fromList
-            <| List.concatMap (\xi -> List.map (\yi -> ( (10 * xi + yi), (xi, yi))) <| List.range 0 sizeY) 
+        keys = List.concatMap (\xi -> List.map (\yi -> (xi, yi)) <| List.range 0 sizeY) 
             <| List.range 0 sizeX
             
-        uncovered = Dict.filter 
-            (\_ (xd, yd) ->
+        uncovered = List.filter 
+            (\(xd, yd) ->
                 case (Matrix.get model.tablero xd yd) of 
                     Nothing -> False
                     Just tile -> case tile of 
@@ -283,39 +357,26 @@ calcularCamino model =
                         Stone -> False
                         Gem _ -> False
             ) 
-            pairs
-
-        pathPointsFree = List.all (\a -> Dict.member (toKey a) uncovered) passingPoints
-        -- The uncovered
+            keys
 
         vecinos = \mx my -> 
             let 
                 xIndexes = if mx == 0 then [0,1] else if mx == sizeX then [0, -1] else [-1, 0, 1]
                 yIndexes = if my == 0 then [0,1] else if my == sizeY then [0, -1] else [-1, 0, 1]
             in
-                List.filter (\(xi, yi) -> Dict.member (toKey (xi, yi)) uncovered)
-                <| List.filter (\(xi, yi) -> xi == mx && yi == mx) 
+                List.filter (\(xi, yi) -> List.member (xi, yi) uncovered)
+                <| List.filter (\(xi, yi) -> xi == mx && yi == my) 
                 <| List.concatMap (\xi -> List.map (\yi -> (xi + mx, yi + my)) yIndexes ) xIndexes
-            
 
-        adjacencies = 
-            Dict.map (\key (px, py) -> 
-                ((px, py), vecinos px py)
+    in 
+          Dict.fromList
+            <| List.map 
+                (\(px, py) -> 
+                    ((px, py) , vecinos px py)
                 ) 
             uncovered
-
-            
-        -- Flags occupied
-    
-        -- path = \pOrigin pDestin model.tablero -> 
-    in 
-        if pathPointsFree then
-            Nothing
-            
-        else
-            Nothing
-
-
+             
+             
 toKey : (Int, Int) -> Int
 toKey (x, y) = 10 * x + y
 
@@ -367,3 +428,4 @@ viewHouse =
 viewDoor : Html msg
 viewDoor = 
     Html.div [] []
+

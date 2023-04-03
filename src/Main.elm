@@ -22,6 +22,7 @@ import Array exposing (length)
 import Dict
 import String exposing (fromFloat)
 
+
 type alias Stats = 
     {
         killedEnemies: Int
@@ -33,7 +34,6 @@ type alias Model =
     {   
         points: Int
       , stepTime : Float
-
       , pausedState : GameState
       , state: GameState
       , modelTablero : Tablero.Model
@@ -49,15 +49,17 @@ type Msg =
     | Pause Bool
     | None
     | TableroMsg Tablero.Msg 
-
     -- Test
     | LevelChange String
 
 
 init : ( Model, Cmd Msg )
 init =
+    let 
+        tablero = Tablero.init 37 37
+    in 
     ( {   points = 0
-        , modelTablero = Tablero.init 37 37
+        , modelTablero = tablero
         , pausedState = NotStarted
         , state = NotStarted
         , stepTime = 1000.0
@@ -131,11 +133,12 @@ view : Model -> Html Msg
 view model =
     Html.main_
         [Attrs.id "gemtd"]
-        [ viewStartButton model.state
-        , viewPauseButton model.state
-        , Tablero.view model.modelTablero |> Html.map TableroMsg
-        , div [Attrs.class "t-slider"] [singleSlider model.modelTablero.level]
-        ]
+        <| 
+            [ viewStartButton model.state
+            , viewPauseButton model.state
+            , Tablero.view model.modelTablero |> Html.map TableroMsg
+            , div [Attrs.class "t-slider"] [singleSlider model.modelTablero.level]
+            ]
 
 
 singleSlider : Int -> Html Msg

@@ -1,12 +1,13 @@
 module Tablero exposing (init, update, Model, Msg, view, fixTower)
 
 import Html exposing (Html, li, ul, div, text, button, input)
-import Matrix exposing(Matrix)
+import Matrix exposing (Matrix)
 import Html.Attributes as Attrs exposing (class, min, max, value, type_)
 import Array exposing (toList, Array)
 import List
 import Debug exposing (toString)
 import Dict exposing (Dict)
+import IntDict
 import Gem exposing (Gem, cssClass, gemName)
 import Html.Events exposing (onClick)
 import Random
@@ -16,42 +17,28 @@ import Array exposing (length)
 import Gem exposing (getLevel)
 import Html exposing (p)
 
-import PathSearch exposing (Model, Key)
+
+import TableroTypes exposing (..)
+
+import BFS exposing (GraphTablero, initGraphFromTablero)
+import Graph exposing (Graph)
+
+import Svg exposing (g)
+import BFS exposing (viewGraph)
+import Graph exposing (NodeContext, Node)
 
 
-type alias Coords =
-    { x : Int
-    , y : Int
-    }
-
-type alias Path =  List (Int, Int)
-
-type alias Tower = 
-    {
-      gem : Gem
-    , coords : Coords
-    , mvp : Int
-    , auras : List String
-    , range : Int
-    , dmg : Int
-    , speed : Int
-    }
-
-type Tile = 
-      Stone
-    | Gem Tower 
-    | Empty
 
 type alias Model = 
     {
           tablero : Matrix Tile
+        , graph : GraphTablero
         , level : Int
         , activeTowers : List Tower
         , buildingTowers : List Tower
         , isBuild : Bool
         , wave : Int
         , selected : Maybe Tower
-        , modelPathSearch : PathSearch.Model
         , paths: List Path
         , viewPath : Bool
     }
@@ -63,23 +50,26 @@ type Msg =
     | Fix Tower
     | ShowInfo Tower
     | StartWave
-    | PathSearchMsg PathSearch.Msg
     | ViewPath Bool
+
 
 init : Int -> Int -> Model
 init rows cols = 
-    {
-        tablero = Matrix.repeat rows cols Empty 
-        , level = 1
-        , buildingTowers = []
-        , activeTowers = []
-        , isBuild = True
-        , wave = 0
-        , selected = Nothing
-        , modelPathSearch = []
-        , viewPath = True
-        , paths = []
-    }
+    let
+        tablero = Matrix.repeat rows cols Empty
+    in
+        {
+              tablero = tablero
+            , graph = initGraphFromTablero tablero
+            , level = 1
+            , buildingTowers = []
+            , activeTowers = []
+            , isBuild = True
+            , wave = 0
+            , selected = Nothing
+            , viewPath = True
+            , paths = []
+        }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg)
@@ -87,19 +77,17 @@ update msg model =
     case msg of 
         Build x y -> 
             let
-                model_ =  { model | tablero = Matrix.set model.tablero x y Stone}
-                (newModel, validPath, paths) = testPath model_
+                -- (newModel, validPath, paths) = testPath model_
+                newGraph = Graph.remove (BFS.toKey (x, y)) model.graph
+                (validPath, paths) = testPath { model | graph = newGraph}
             in
                 -- Verify if path is not broken 
                 if validPath then
-                    let
-                        modelWithPaths =  {newModel | paths = paths}
-                    in
-                        case (List.length model.buildingTowers) of 
-                            4 -> ({modelWithPaths | isBuild = False}, newTower model.level x y )
-                            _ -> (modelWithPaths, newTower model.level x y  )
+                    case (List.length model.buildingTowers) of 
+                        4 -> ({model | paths = paths,  graph=newGraph, isBuild = False}, newTower model.level x y )
+                        _ -> ({model | paths = paths, graph=newGraph}, newTower model.level x y  )
                 else 
-                    ({model_ | modelPathSearch = newModel.modelPathSearch}, Cmd.none)
+                    (model, Cmd.none)
 
         NewGem tower  -> 
             ( { model | tablero = Matrix.set model.tablero tower.coords.x tower.coords.y (Gem tower)
@@ -112,6 +100,7 @@ update msg model =
                 ( {modelWithFixedTowerAndStones | 
                     activeTowers = tower :: model.activeTowers
                     , buildingTowers = []
+                    , graph = BFS.initGraphFromTablero modelWithFixedTowerAndStones.tablero
                     , isBuild = True -- TO BE REMOVED
                 }, Task.perform identity (Task.succeed StartWave))
 
@@ -121,12 +110,6 @@ update msg model =
         ShowInfo tower -> 
             ( {model | selected = Just tower}, Cmd.none)
 
-        PathSearchMsg childMsg ->
-            let
-                (newModeloPathSearch, pathSCmd) =  PathSearch.update childMsg model.modelPathSearch
-            in
-                ({ model | modelPathSearch = newModeloPathSearch}, Cmd.map (\cmd -> PathSearchMsg cmd) pathSCmd)
-        
         ViewPath toggle -> 
                 ({ model | viewPath = toggle}, Cmd.none)
 
@@ -170,28 +153,28 @@ view model =
                 [ Html.section 
                     [Attrs.class "t-tablero"]
                     <| List.concat [
-                        List.map (\row -> viewRow model.isBuild (Matrix.getXs model.tablero row) row) (List.range 0 (x - 1))
+                        List.map (\row -> viewRow model.isBuild (Matrix.getXs model.tablero row) row model) (List.range 0 (x - 1) )
                     ]
                 , Html.section 
                     [Attrs.class "t-info"]
                         [viewTower model]
                 , viewPathSearchButton model.viewPath
-                ]
-                <|  if model.viewPath then
-                        [PathSearch.view model.modelPathSearch |> Html.map PathSearchMsg] 
-                    else []
+                ] []
+                -- <|  if model.viewPath then
+                --         [PathSearch.view model.modelPathSearch |> Html.map PathSearchMsg] 
+                --     else []
 
 
 
-viewRow : Bool -> Array Tile -> Int -> Html Msg
-viewRow isBuild row rowIndex = 
+viewRow : Bool -> Array Tile -> Int -> Model -> Html Msg
+viewRow isBuild row rowIndex m = 
     ul 
         [ Attrs.class "t-row"]
-        (toList (Array.indexedMap (\colIndex tile -> viewTile isBuild tile rowIndex colIndex) row))
+        (toList (Array.indexedMap (\colIndex tile -> viewTile isBuild tile rowIndex colIndex m) row))
 
 
-viewTile : Bool -> Tile -> Int -> Int -> Html Msg
-viewTile isBuild tile rIndex cIndex = 
+viewTile : Bool -> Tile -> Int -> Int -> Model -> Html Msg
+viewTile isBuild tile rIndex cIndex m = 
     let
         isPair = \i -> modBy 2 i == 0 
         
@@ -229,29 +212,34 @@ viewTile isBuild tile rIndex cIndex =
             , buildable
             ]
 
-        indexes = div [Attrs.hidden True] [text <| (toString rIndex) ++" "++ (toString cIndex)]
+
+        otherHtml = [
+            div [Attrs.hidden True] [text <| (toString rIndex) ++" "++ (toString cIndex)] --indexes = 
+            , (viewGraphNode tile rIndex cIndex m.graph)
+            , viewPathsNode m rIndex cIndex
+            ] 
     in
         if (List.length buildable > 0) then
             if (List.length coveringElement) > 0 then
                 li [ Attrs.classList classes
                 , onClick <| Build rIndex cIndex] 
-                [ Html.div [Attrs.classList  coveringElement] [indexes] ]
+                [ Html.div [Attrs.classList  coveringElement] otherHtml ]
             else
                 li [ Attrs.classList classes
-                , onClick <| Build rIndex cIndex] [ indexes]
+                , onClick <| Build rIndex cIndex] otherHtml
         else
             if (List.length coveringElement) > 0 then
                 case maybeTower of 
                     Just t -> 
                         li [ Attrs.classList classes , onClick <| ShowInfo t] 
-                        [ Html.div [Attrs.classList  coveringElement] [indexes] ]  
+                        [ Html.div [Attrs.classList  coveringElement] otherHtml ]  
                     Nothing -> 
                         li [ Attrs.classList classes ] 
-                        [ Html.div [Attrs.classList  coveringElement] [indexes] ]  
+                        [ Html.div [Attrs.classList  coveringElement] otherHtml ]  
                 
                
             else
-                li [ Attrs.classList classes] [ indexes]
+                li [ Attrs.classList classes] otherHtml
 
 -- viewTowerList : List Tower -> Html Msg
 -- viewTowerList towers =
@@ -293,11 +281,12 @@ viewTower  model =
                                 [ text <| "Speed: " ++ toString tower.speed ]
                             ]]
                         , selectButton
-                        ,        Dict.values 
-                                <| Dict.map (\k a -> ul [] 
-                                    <| List.append [text <| toString k] 
-                                    <| List.map (\(wx, wy)-> li [][text <| (toString wx) ++ " " ++ (toString wy)]) a )  
-                                <| adjacencyList model
+                        -- , [viewGraph model.graph]
+                        -- ,        Dict.values 
+                        --         <| Dict.map (\k a -> ul [] 
+                        --             <| List.append [text <| toString k] 
+                        --             <| List.map (\(wx, wy)-> li [][text <| (toString wx) ++ " " ++ (toString wy)]) a )  
+                        --         <| adjacencyList model
                         ]
 
 viewPathSearchButton : Bool -> Html Msg
@@ -308,77 +297,74 @@ viewPathSearchButton state =
         button [onClick <| ViewPath (not state),  Attrs.class "t-ps-toggle"] [ text "Enable PS view" ]
 
 
-pathPoint : List Key
+viewGraph : GraphTablero -> Html Msg
+viewGraph graph = 
+    Html.section [class "t-graph"]
+    [text <| BFS.viewGraph graph]
+
+viewPathsNode : Model -> Int -> Int -> Html Msg 
+viewPathsNode m r c =
+    if (List.member (r, c)
+        <| List.concatMap Basics.identity m.paths) then
+        Html.div [class "t-path"] []
+    else 
+        Html.div [][]
+
+viewGraphNode : Tile -> Int -> Int -> GraphTablero -> Html Msg
+viewGraphNode t rI cI g =
+    let
+      nodeData = \n -> 
+                Html.div [] [ 
+                      text <| "id" ++ (toString n.id)
+                    , text <| "distance" ++ (toString n.label.vertexDistance)]
+
+      node = \nc -> Html.div [
+                             Attrs.class "t-graph-node"
+                            , Attrs.style "position" "absolute"
+                            , Attrs.style "overflow" "hidden" 
+                            , Attrs.style "max-width" "30px"
+                            , Attrs.style "max-height" "30px"
+                            , Attrs.style "pointer-events" "none"] 
+            <|  List.append
+                (List.map (\(key, v) -> 
+                    Html.div [Attrs.class "t-graph-edge"
+                    , Attrs.style "overflow" "hidden"] 
+                    [text <| toString key , text <| toString v]
+                ) <| IntDict.toList nc.outgoing)
+                [nodeData nc.node]
+        
+      empty =  Html.div [] []
+    in
+        case (Graph.get (BFS.toKey (rI, cI)) g) of
+            Just nc -> node nc
+            Nothing -> empty
+
+
+pathPoint : List (Int, Int)
 pathPoint = List.append ((4,4) :: flags) [(32, 32)]
 
 
-testPath : Model -> (Model, Bool, List Path)
+testPath : Model -> (Bool, List Path)
 testPath model = 
-    let     
-        pointsAndAdjacent = adjacencyList model 
-        pathSData = model.modelPathSearch
-    in
-        let 
-            (pathsData, paths, _) = List.foldl 
-                (\p (mod, pPrev, nextItems)-> 
-                    case (List.head nextItems) of 
-                        Nothing ->  (mod, pPrev, [])
-                        Just head -> 
-                            let
-                                pathSearchExecutionResult = PathSearch.bfs (PathSearch.init pointsAndAdjacent) p head (Nothing, 0)
-                            in 
-                                case pathSearchExecutionResult.path of
-                                    Nothing -> ((pathSearchExecutionResult::mod), pPrev, Maybe.withDefault [] <| List.tail nextItems )
-                                    Just path -> ((pathSearchExecutionResult::mod), path::pPrev, Maybe.withDefault [] <| List.tail nextItems)
-                ) 
-                (pathSData, [], Maybe.withDefault [] <| List.tail pathPoint)
-                pathPoint
-        in
-            ({model | modelPathSearch = pathsData}, (List.length pathPoint) - 2 == (List.length paths), paths)
-
-{-
-    A esta función hay que llamarla como test antes de cada insert
-
--}
-adjacencyList : Model -> Dict (Int, Int) (List (Int, Int))
-adjacencyList model = 
     let 
-        (sizeX, sizeY) = Matrix.size model.tablero
-
-        keys = List.concatMap (\xi -> List.map (\yi -> (xi, yi)) <| List.range 0 sizeY) 
-            <| List.range 0 sizeX
-            
-        uncovered = List.filter 
-            (\(xd, yd) ->
-                case (Matrix.get model.tablero xd yd) of 
-                    Nothing -> False
-                    Just tile -> case tile of 
-                        Empty -> True
-                        Stone -> False
-                        Gem _ -> False
+        (paths, _) = List.foldl 
+            (\p (pathsData,  nextItems)-> 
+                case (List.head nextItems) of 
+                    Nothing ->  (pathsData,  [])
+                    Just head -> 
+                        let
+                            foundPath = BFS.bfs (BFS.toKey p) (BFS.toKey head) model.graph
+                        in 
+                            ((foundPath::pathsData), Maybe.withDefault [] <| List.tail nextItems )
+                                
             ) 
-            keys
+            ([], Maybe.withDefault [] <| List.tail pathPoint)
+            pathPoint
+        pathsDataFiltered = List.filter (\l -> not <| List.isEmpty l) paths 
+    in
+        ((List.length pathPoint) - 1 == (List.length pathsDataFiltered), pathsDataFiltered)
 
-        vecinos = \mx my -> 
-            let 
-                xIndexes = if mx == 0 then [0,1] else if mx == sizeX then [0, -1] else [-1, 0, 1]
-                yIndexes = if my == 0 then [0,1] else if my == sizeY then [0, -1] else [-1, 0, 1]
-            in
-                List.filter (\(xi, yi) -> List.member (xi, yi) uncovered)
-                <| List.filter (\(xi, yi) -> xi == mx && yi == my) 
-                <| List.concatMap (\xi -> List.map (\yi -> (xi + mx, yi + my)) yIndexes ) xIndexes
 
-    in 
-          Dict.fromList
-            <| List.map 
-                (\(px, py) -> 
-                    ((px, py) , vecinos px py)
-                ) 
-            uncovered
-             
-             
-toKey : (Int, Int) -> Int
-toKey (x, y) = 10 * x + y
 
 isHouse : Int -> Int -> Bool
 isHouse x y =
@@ -429,3 +415,7 @@ viewDoor : Html msg
 viewDoor = 
     Html.div [] []
 
+
+-- matrixToList : Matrix a -> List a
+-- matrixToList m = 
+--     m.

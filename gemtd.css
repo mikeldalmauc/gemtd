@@ -76,21 +76,6 @@
 }
 
 
-.t-1-topaz, .t-2-topaz, .t-3-topaz, .t-4-topaz, .t-5-topaz, .t-6-topaz {
-    background-color:  rgb(193, 140, 6);
-}
-
-.t-1-opal, .t-2-opal, .t-3-opal, .t-4-opal, .t-5-opal, .t-6-opal{
-    background-color:  rgb(21, 7, 47);
-}
-
-.t-1-emerald, .t-2-emerald, .t-3-emerald, .t-4-emerald, .t-5-emerald, .t-6-emerald {
-    background-image: url( /assets/emerald.svg );
-    height: 100%;
-    scale: 1.5;
-    margin-bottom: 3px;
-}
-
 .t-gem {
     z-index:10;
     position: relative;
@@ -98,8 +83,19 @@
     /* box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.6); */
 	transform: translatey(0px);
 	animation: float 6s ease-in-out infinite;
-    margin-bottom: 13px;
 }
+
+
+.t-gem:hover {
+    transition-delay: 0.6s;
+    
+    filter:contrast(1.4);
+    scale: calc(scale*1.2);
+
+    pointer-events:  unset ;
+    user-select: none !important ;
+}
+
 
 @keyframes float {
 	0% {
@@ -116,6 +112,21 @@
 	}
 }
 
+.t-1-topaz, .t-2-topaz, .t-3-topaz, .t-4-topaz, .t-5-topaz, .t-6-topaz {
+    background-color:  rgb(193, 140, 6);
+
+}
+
+.t-1-opal, .t-2-opal, .t-3-opal, .t-4-opal, .t-5-opal, .t-6-opal{
+    background-image: url( /assets/opal.svg );
+}
+
+.t-1-emerald, .t-2-emerald, .t-3-emerald, .t-4-emerald, .t-5-emerald, .t-6-emerald {
+    background-image: url( /assets/emerald.svg );
+    height: 100%;
+    scale: 1.5;
+    margin-bottom: 3px;
+}
 
 .t-1-sapphire, .t-2-sapphire, .t-3-sapphire, .t-4-sapphire, .t-5-sapphire, .t-6-sapphire {
     background-color:  rgb(118, 208, 213);
@@ -123,9 +134,6 @@
 
 .t-1-ruby, .t-2-ruby, .t-3-ruby, .t-4-ruby, .t-5-ruby, .t-6-ruby  {
     background-image: url( /assets/ruby.svg );
-    height: 100%;
-    scale: 1.4;    
-    padding-bottom: 10px;
 }
 
 .t-1-diamond, .t-2-diamond, .t-3-diamond, .t-4-diamond, .t-5-diamond, .t-6-diamond {
@@ -133,7 +141,7 @@
 }
 
 .t-1-amethyst, .t-2-amethyst, .t-3-amethyst, .t-4-amethyst, .t-5-amethyst, .t-6-amethyst {
-    background-color:  rgb(89, 93, 16);
+    background-image: url( /assets/amethyst.svg );
 }
 
 .t-1-aquamarine, .t-2-aquamarine, .t-3-aquamarine, .t-4-aquamarine, .t-5-aquamarine, .t-6-aquamarine{
@@ -162,12 +170,14 @@
 .t-s-6{
     scale: 4;
 }
+
+
 /* 
 .t-i{
     background-image: url( /assets/casilla-i.svg );
 } */
 
-.t-start, .t-resume, .t-ps-toggle{
+.t-start, .t-resume, .t-ps-toggle {
     height: 70px;
     margin-top: 50px;
     width: 180px;
@@ -194,4 +204,18 @@
     position: relative;
 
     left: 1300px;
+}
+
+.t-graph {
+    visibility: hidden;
+}
+
+.t-path {
+    position: absolute;
+    scale: 1;
+    width: 10px;
+    height: 10px;
+    z-index: 100;
+    background-color: chocolate;
+    border-radius: 100%;
 }

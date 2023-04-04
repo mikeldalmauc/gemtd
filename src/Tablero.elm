@@ -215,9 +215,10 @@ viewTile isBuild tile rIndex cIndex m =
         
         otherHtml = [
             --indexes = 
-            div [Attrs.hidden True] [text <| (toString rIndex) ++" "++ (toString cIndex)] 
+            -- div [Attrs.hidden True] [text <| (toString rIndex) ++" "++ (toString cIndex)] 
             -- , (viewGraphNode tile rIndex cIndex m.graph)
-            , viewPathsNode m rIndex cIndex
+            -- , viewPathsNode m rIndex cIndex
+            --    if not (List.isEmpty coveringElement) then div[class "t-shadow"][] else div [][]
             ] 
     in
         if (List.length buildable > 0) then

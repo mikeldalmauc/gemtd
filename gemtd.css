@@ -14,16 +14,22 @@
     min-width: 1.110px;
     min-height: 1.110px;
     /* margin:  10% 32% 18% 32%; */
-    background-color: rgb(243, 19, 190);
+    
     border-style: groove;
     border-width: 15px;
     user-select: none;
     position: absolute;
     display: flex;
     flex-direction: column;
-
+    
     margin-left: 30px;
     margin-top: 30px;
+
+    background-image: url(assets/mapa.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    overflow: hidden;
 }
 
 
@@ -40,7 +46,7 @@
 .t-tile  {
     min-width: 30px;
     min-height: 30px;
-    background-color: rgb(124, 176, 143);
+    /* background-color: rgb(124, 176, 143); */
     list-style: none;
 }
 
@@ -49,65 +55,87 @@
 }
 
 .t-buildable:hover {
-    box-shadow: inset 0px 0px 4px 2px rgba(186, 186, 186, 0.8)
-                , 0px 0px 3px 2px rgba(186, 186, 186, 0.8);
+    box-shadow: inset 0px 0px 4px 2px rgba(71, 89, 160, 0.8)
+                , 0px 0px 3px 2px rgba(71, 89, 160, 0.8);
 }
 
 .t-checked {
-    background-color:  rgb(44, 71, 54);
+    /* background-color:  rgb(44, 71, 54); */
 }
 
 .t-stone {
     background-image: url( /assets/stone.svg );
     scale: 1.2;
     padding-bottom: 10px;
-    z-index:10;
+    z-index:20;
     position: relative;
     height: 100%;
+    transform-style: preserve-3d;
 }
 
-.t-steps {
+/* .t-steps {
     background-color:  rgb(205, 226, 44);
 }
 
 .t-flag {
     background-color:  rgb(225, 40, 40);
-}
+} */
 
 
 .t-gem {
-    z-index:10;
+    z-index:20;
     position: relative;
     height: 100%;
     /* box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.6); */
 	transform: translatey(0px);
 	animation: float 6s ease-in-out infinite;
+
+    padding-bottom: 10px;
+    transform-style: preserve-3d;
 }
 
+.t-tile:has(.t-gem):hover {
+    box-shadow: inset 0px 0px 4px 2px rgba(241, 161, 80, 0.8)
+                , 0px 0px 3px 2px rgba(241, 161, 80, 0.8);
+}
 
 .t-gem:hover {
+ 
     transition-delay: 0.6s;
-    
     filter:contrast(1.4);
-    scale: calc(scale*1.2);
-
+/* 
     pointer-events:  unset ;
-    user-select: none !important ;
+    user-select: none !important ; */
 }
 
+.t-tile:has(.t-gem)::after ,
+.t-tile:has(.t-stone)::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    min-width: 33px;
+    min-height: 100%;
+    background: #272727;
+    opacity: 0.7;
+    filter: blur(4px);
+    transform: scale(1, 0.7);
+    z-index: 10;
+    top: 2px;
+    margin-left: 2px;
+}
 
 @keyframes float {
     0% {
         transform: translatey(0px);
-        rotate: 1deg;
+        /* rotate: 1deg; */
 	}
 	50% {
-		transform: translatey(-3px);
-        rotate: -2deg;
+		transform: translatey(-1px);
+        /* rotate: -2deg; */
 	}
 	100% {
         transform: translatey(0px);
-        rotate: 1deg;
+        /* rotate: 1deg; */
 	}
 }
 
@@ -124,7 +152,7 @@
 }
 
 .t-1-sapphire, .t-2-sapphire, .t-3-sapphire, .t-4-sapphire, .t-5-sapphire, .t-6-sapphire {
-    background-color:  rgb(118, 208, 213);
+    background-image: url( /assets/sapphire.svg );
 }
 
 .t-1-ruby, .t-2-ruby, .t-3-ruby, .t-4-ruby, .t-5-ruby, .t-6-ruby  {
@@ -141,7 +169,7 @@
 }
 
 .t-1-aquamarine, .t-2-aquamarine, .t-3-aquamarine, .t-4-aquamarine, .t-5-aquamarine, .t-6-aquamarine{
-    background-color:  rgb(191, 27, 194);
+    background-image: url( /assets/aquamarine.svg );
 }
 
 .t-s-1 {

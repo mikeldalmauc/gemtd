@@ -22,6 +22,7 @@ type Tile =
       Stone
     | Gem Tower 
     | Empty
+    | Flag
 
 
 type alias AdjacencyList =  List  (Int, List Int)

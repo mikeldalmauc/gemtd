@@ -56,7 +56,10 @@ type Msg =
 init : Int -> Int -> Model
 init rows cols = 
     let
-        tablero = Matrix.repeat rows cols Empty
+        tablero =
+             Matrix.indexedMap (\x y a -> if isFlag x y then Flag else a)
+            <| Matrix.repeat rows cols Empty
+        
     in
         {
               tablero = tablero
@@ -190,16 +193,15 @@ viewTile isBuild tile rIndex cIndex m =
         
         steps = if (isSteps rIndex cIndex) then [("t-steps", True)] else []
 
-        flag = if (isFlag rIndex cIndex) then [("t-flag", True)] else []
-            
-        (coveringElement, notGem, maybeTower) =
+        (coveringElement, buildable, maybeTower) =
             case tile of
                 Stone -> ([("t-stone", True)], True, Nothing) 
                 Gem tower -> ([(cssClass tower.gem, True), ("t-gem", True), (scaleClass tower.gem, True)], False, Just tower)
                 Empty -> ([], True, Nothing)
-
-        buildable = 
-            if (isBuild && notGem && (List.isEmpty flag) && (not house)) then
+                Flag -> ([("t-flag", True)], False, Nothing)
+                
+        classBuildable = 
+            if (isBuild && buildable && (not house)) then
                 [("t-buildable", True)]
             else
                 []
@@ -208,8 +210,7 @@ viewTile isBuild tile rIndex cIndex m =
             [("t-tile", True)]
             , isChecked
             , steps
-            , flag
-            , buildable
+            , classBuildable
             ]
 
         
@@ -217,11 +218,11 @@ viewTile isBuild tile rIndex cIndex m =
             --indexes = 
             -- div [Attrs.hidden True] [text <| (toString rIndex) ++" "++ (toString cIndex)] 
             -- , (viewGraphNode tile rIndex cIndex m.graph)
-            -- , viewPathsNode m rIndex cIndex
+            --  viewPathsNode m rIndex cIndex
             --    if not (List.isEmpty coveringElement) then div[class "t-shadow"][] else div [][]
             ] 
     in
-        if (List.length buildable > 0) then
+        if (List.length classBuildable > 0) then
             if (List.length coveringElement) > 0 then
                 li [ Attrs.classList classes
                 , onClick <| Build rIndex cIndex] 

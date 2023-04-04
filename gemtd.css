@@ -73,13 +73,17 @@
     transform-style: preserve-3d;
 }
 
-/* .t-steps {
-    background-color:  rgb(205, 226, 44);
-}
-
 .t-flag {
-    background-color:  rgb(225, 40, 40);
-} */
+    position: relative;
+    z-index: 20;
+    height: 100%;
+    background-image: url( /assets/flag.svg );
+
+    scale: 1.5;
+    margin-bottom: 2px;
+    margin-right: 2px;
+    filter: contrast(1.2);
+} 
 
 
 .t-gem {
@@ -108,6 +112,7 @@
     user-select: none !important ; */
 }
 
+
 .t-tile:has(.t-gem)::after ,
 .t-tile:has(.t-stone)::after {
     content: "";
@@ -122,6 +127,21 @@
     z-index: 10;
     top: 2px;
     margin-left: 2px;
+}
+
+.t-tile:has(.t-flag)::after{
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    min-width: 20px;
+    min-height: 100%;
+    background: #272727;
+    opacity: 0.7;
+    filter: blur(4px);
+    transform: scale(1, 0.7);
+    z-index: 10;
+    top: 2px;
+    margin-left: 8px;
 }
 
 @keyframes float {

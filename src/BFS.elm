@@ -114,6 +114,7 @@ isCovered xi yi tablero =
             Empty -> True
             Stone -> False
             Gem _ -> False
+            Flag -> True
 
 toKey : (Int, Int) -> Int
 toKey (x, y) = 100 * x + y

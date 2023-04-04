@@ -1,8 +1,7 @@
 #gemtd {
     display: flex;
     flex-direction: column;
-    overflow: hidden; 
-
+    /* overflow: hidden;  */
 }
 
 #gemtd * {
@@ -98,8 +97,8 @@
 
 
 @keyframes float {
-	0% {
-		transform: translatey(0px);
+    0% {
+        transform: translatey(0px);
         rotate: 1deg;
 	}
 	50% {
@@ -107,14 +106,13 @@
         rotate: -2deg;
 	}
 	100% {
-		transform: translatey(0px);
+        transform: translatey(0px);
         rotate: 1deg;
 	}
 }
 
 .t-1-topaz, .t-2-topaz, .t-3-topaz, .t-4-topaz, .t-5-topaz, .t-6-topaz {
-    background-color:  rgb(193, 140, 6);
-
+    background-image: url( /assets/topaz.svg );
 }
 
 .t-1-opal, .t-2-opal, .t-3-opal, .t-4-opal, .t-5-opal, .t-6-opal{
@@ -123,9 +121,6 @@
 
 .t-1-emerald, .t-2-emerald, .t-3-emerald, .t-4-emerald, .t-5-emerald, .t-6-emerald {
     background-image: url( /assets/emerald.svg );
-    height: 100%;
-    scale: 1.5;
-    margin-bottom: 3px;
 }
 
 .t-1-sapphire, .t-2-sapphire, .t-3-sapphire, .t-4-sapphire, .t-5-sapphire, .t-6-sapphire {
@@ -137,7 +132,8 @@
 }
 
 .t-1-diamond, .t-2-diamond, .t-3-diamond, .t-4-diamond, .t-5-diamond, .t-6-diamond {
-    background-color:  rgb(218, 218, 218);
+    
+    background-image: url( /assets/diamond.svg);
 }
 
 .t-1-amethyst, .t-2-amethyst, .t-3-amethyst, .t-4-amethyst, .t-5-amethyst, .t-6-amethyst {

@@ -102,8 +102,7 @@ bfs src dest g =
                 g 
     in
         List.map
-        (\nc -> 
-             (fromKey nc.node.id) )
+        (\nc -> (fromKey nc.node.id) )
         pathShortest
 
 

@@ -212,10 +212,11 @@ viewTile isBuild tile rIndex cIndex m =
             , buildable
             ]
 
-
+        
         otherHtml = [
-            div [Attrs.hidden True] [text <| (toString rIndex) ++" "++ (toString cIndex)] --indexes = 
-            , (viewGraphNode tile rIndex cIndex m.graph)
+            --indexes = 
+            div [Attrs.hidden True] [text <| (toString rIndex) ++" "++ (toString cIndex)] 
+            -- , (viewGraphNode tile rIndex cIndex m.graph)
             , viewPathsNode m rIndex cIndex
             ] 
     in

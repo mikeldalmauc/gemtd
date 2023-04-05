@@ -36,7 +36,7 @@ stylesheet =
     margin-left: 30px;
     margin-top: 30px;
 
-    background-image: url(assets/mapa.jpg);
+    background-image: url(/assets/mapa.jpg);
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center center;

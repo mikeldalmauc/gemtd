@@ -23,7 +23,7 @@ import String exposing (fromFloat)
 import Gem 
 import Tablero
 import Enemies
-
+import StyleSheet
 
 type alias Stats = 
     {
@@ -60,7 +60,6 @@ type Msg =
     -- Test
     | LevelChange String
     | WindowSize Int Int
-
 
 init : Model
 init =
@@ -118,8 +117,15 @@ update msg model =
             in
                 ({ model | modelTablero = { newModelTablero | level = leveli}}, Cmd.none)
             
-        
-
+        WindowSize width height ->
+            ( { model
+                | window =
+                    { width = width
+                    , height = height
+                    }
+              }
+            , Cmd.none
+            )
              
 issueMsgAsCmd : Msg -> Cmd Msg
 issueMsgAsCmd msg =
@@ -143,17 +149,17 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "Mario - Elm Animator"
     , body = 
-        [ stylesheet
+        [ StyleSheet.stylesheet
         , Html.div
-        Html.main_
             [Attrs.id "gemtd"]
-            <| 
-                [ viewStartButton model.state
-                , viewPauseButton model.state
-                , Tablero.view model.modelTablero |> Html.map TableroMsg
-                , viewDeveloperTools model
-                , div [Attrs.class "t-slider"] [viewDeveloperTools model]
-                ]
+            [ viewStartButton model.state
+            , viewPauseButton model.state
+            , Tablero.view model.modelTablero |> Html.map TableroMsg
+            , viewDeveloperTools model
+            , div [Attrs.class "t-slider"] [viewDeveloperTools model]
+            ]
+        ]
+    }
 
 viewDeveloperTools : Model -> Html Msg 
 viewDeveloperTools model = 
@@ -196,6 +202,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [  onKeyDown (Json.map HandleKeyboardEvent decodeKeyboardEvent)
+        ,  Browser.Events.onResize WindowSize
         ,  Time.every model.stepTime (\_ -> Advance)
         ,  Sub.map (\m -> TableroMsg m) <| Tablero.subscriptions 
         ]

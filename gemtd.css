@@ -263,3 +263,20 @@
     background-color: chocolate;
     border-radius: 100%;
 }
+
+.g-e-enemy {
+    font-size: 10px;
+    position: absolute;
+
+    z-index: 20;
+
+    height: 20px;
+    width: 20px;
+
+    scale: 1.5;
+    margin-bottom: 2px;
+    margin-right: 2px;
+    filter: contrast(1.2);
+    background-repeat: no-repeat;
+    background-image: url(/assets/flag.svg);
+}

@@ -1,4 +1,4 @@
-module Tablero exposing (init, update, Model, Msg, view, fixTower)
+module Tablero exposing (..)
 
 import Html exposing (Html, li, ul, div, text, button, input)
 import Matrix exposing (Matrix)
@@ -26,16 +26,20 @@ import Graph exposing (Graph)
 import Svg exposing (g)
 import BFS exposing (viewGraph)
 import Graph exposing (NodeContext, Node)
-
+import Enemies
 
 
 type alias Model = 
     {
           tablero : Matrix Tile
         , graph : GraphTablero
-        , level : Int
+
         , activeTowers : List Tower
         , buildingTowers : List Tower
+        
+        , level : Int
+        , modelEnemies : Enemies.Model
+
         , isBuild : Bool
         , wave : Int
         , selected : Maybe Tower
@@ -49,9 +53,13 @@ type Msg =
     | NewGem Tower
     | Fix Tower
     | ShowInfo Tower
-    | StartWave
     | ViewPath Bool
+    | EnemiesMsg Enemies.Msg 
 
+subscriptions :  Sub Msg
+subscriptions =
+    -- Time.every 100 (\_ -> Cmd.map (\m -> Move) a)
+     Sub.map (\m -> EnemiesMsg m) <| Enemies.subscriptions 
 
 init : Int -> Int -> Model
 init rows cols = 
@@ -69,6 +77,7 @@ init rows cols =
             , activeTowers = []
             , isBuild = True
             , wave = 0
+            , modelEnemies = Enemies.init
             , selected = Nothing
             , viewPath = True
             , paths = []
@@ -83,11 +92,16 @@ update msg model =
                 -- (newModel, validPath, paths) = testPath model_
                 newGraph = Graph.remove (BFS.toKey (x, y)) model.graph
                 (validPath, paths) = testPath { model | graph = newGraph}
+                modelEnemies = model.modelEnemies
             in
                 -- Verify if path is not broken 
                 if validPath then
+                
+                    -- The user has finished building
                     case (List.length model.buildingTowers) of 
-                        4 -> ({model | paths = paths,  graph=newGraph, isBuild = False}, newTower model.level x y )
+                        4 -> ({model | paths = paths,  modelEnemies  = {modelEnemies | paths = paths} ,graph=newGraph, isBuild = False},
+                          Cmd.batch [ newTower model.level x y]
+                         )
                         _ -> ({model | paths = paths, graph=newGraph}, newTower model.level x y  )
                 else 
                     (model, Cmd.none)
@@ -104,18 +118,25 @@ update msg model =
                     activeTowers = tower :: model.activeTowers
                     , buildingTowers = []
                     , graph = BFS.initGraphFromTablero modelWithFixedTowerAndStones.tablero
-                    , isBuild = True -- TO BE REMOVED
-                }, Task.perform identity (Task.succeed StartWave))
+                    , isBuild = False -- TO BE REMOVED
+                    , wave = model.wave + 1
+                }, 
+                 Cmd.map (\cmd -> EnemiesMsg cmd) <| Task.perform identity (Task.succeed Enemies.StartWave))
 
-        StartWave -> 
-            ({model | wave = model.wave + 1}, Cmd.none)
+        
+        EnemiesMsg childMsg ->
+            let
+                (newModelEnemies, enemiesCmd) =  Enemies.update childMsg model.modelEnemies
+            in
+                ({ model | modelEnemies = newModelEnemies}, Cmd.map (\cmd -> EnemiesMsg cmd) enemiesCmd)
+
 
         ShowInfo tower -> 
             ( {model | selected = Just tower}, Cmd.none)
 
         ViewPath toggle -> 
                 ({ model | viewPath = toggle}, Cmd.none)
-
+    
 newTower : Int -> Int -> Int -> Cmd Msg
 newTower level x y  = 
     Random.generate NewGem
@@ -161,12 +182,10 @@ view model =
                 , Html.section 
                     [Attrs.class "t-info"]
                         [viewTower model]
+                
+                , Enemies.view model.modelEnemies |> Html.map EnemiesMsg
                 , viewPathSearchButton model.viewPath
                 ] []
-                -- <|  if model.viewPath then
-                --         [PathSearch.view model.modelPathSearch |> Html.map PathSearchMsg] 
-                --     else []
-
 
 
 viewRow : Bool -> Array Tile -> Int -> Model -> Html Msg
@@ -218,7 +237,7 @@ viewTile isBuild tile rIndex cIndex m =
             --indexes = 
             -- div [Attrs.hidden True] [text <| (toString rIndex) ++" "++ (toString cIndex)] 
             -- , (viewGraphNode tile rIndex cIndex m.graph)
-            --  viewPathsNode m rIndex cIndex
+             viewPathsNode m rIndex cIndex
             --    if not (List.isEmpty coveringElement) then div[class "t-shadow"][] else div [][]
             ] 
     in

@@ -13,14 +13,15 @@ import Json.Decode as Json
 import Process
 import Task
 import Random
-import Tablero
-
-import Gem 
 import Time
 import Matrix
 import Array exposing (length)
 import Dict
 import String exposing (fromFloat)
+
+import Gem 
+import Tablero
+import Enemies
 
 
 type alias Stats = 
@@ -93,11 +94,13 @@ update msg model =
         None -> (model, Cmd.none)
 
         TableroMsg childMsg ->
-            let
-                (newModelTablero, tableroCmd) =  Tablero.update childMsg model.modelTablero
-            in
-                ({ model | modelTablero = newModelTablero}, Cmd.map (\cmd -> TableroMsg cmd) tableroCmd)
-
+            case childMsg of 
+                _ ->
+                     let
+                        (newModelTablero, tableroCmd) =  Tablero.update childMsg model.modelTablero
+                    in
+                        ({ model | modelTablero =  newModelTablero} ,Cmd.map (\cmd -> TableroMsg cmd) tableroCmd)
+           
         -- Test
         LevelChange newLevel -> 
             let
@@ -108,7 +111,7 @@ update msg model =
             in
                 ({ model | modelTablero = { newModelTablero | level = leveli}}, Cmd.none)
             
-
+        
 
              
 issueMsgAsCmd : Msg -> Cmd Msg
@@ -137,8 +140,13 @@ view model =
             [ viewStartButton model.state
             , viewPauseButton model.state
             , Tablero.view model.modelTablero |> Html.map TableroMsg
-            , div [Attrs.class "t-slider"] [singleSlider model.modelTablero.level]
+            , viewDeveloperTools model
+            , div [Attrs.class "t-slider"] [viewDeveloperTools model]
             ]
+
+viewDeveloperTools : Model -> Html Msg 
+viewDeveloperTools model = 
+    singleSlider model.modelTablero.level
 
 
 singleSlider : Int -> Html Msg
@@ -176,8 +184,11 @@ viewPauseButton state =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ onKeyDown (Json.map HandleKeyboardEvent decodeKeyboardEvent)
-        , Time.every model.stepTime (\_ -> Advance)]
+        [  onKeyDown (Json.map HandleKeyboardEvent decodeKeyboardEvent)
+        ,  Time.every model.stepTime (\_ -> Advance)
+        ,  Sub.map (\m -> TableroMsg m) <| Tablero.subscriptions 
+        ]
+
 
 main : Program () Model Msg
 main =

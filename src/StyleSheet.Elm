@@ -1,0 +1,296 @@
+module StyleSheet exposing (..)
+
+import Html exposing (Html)
+
+
+stylesheet : Html msg
+stylesheet =
+    Html.node "style"
+        []
+        [ Html.text """
+        
+#gemtd {
+    display: flex;
+    flex-direction: column;
+    /* overflow: hidden;  */
+}
+
+#gemtd * {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+}
+
+.t-tablero {
+    min-width: 1.110px;
+    min-height: 1.110px;
+    /* margin:  10% 32% 18% 32%; */
+    
+    border-style: groove;
+    border-width: 15px;
+    user-select: none;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    
+    margin-left: 30px;
+    margin-top: 30px;
+
+    background-image: url(assets/mapa.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    overflow: hidden;
+}
+
+
+.t-row {
+    min-height: 30px;
+    position: relative;
+    margin: unset;
+    padding-inline-start: unset;
+    display: flex;
+    list-style: none;
+    flex-direction: row;
+}
+
+.t-tile  {
+    min-width: 30px;
+    min-height: 30px;
+    /* background-color: rgb(124, 176, 143); */
+    list-style: none;
+}
+
+.t-tile *{
+    background-repeat: no-repeat;
+}
+
+.t-buildable:hover {
+    box-shadow: inset 0px 0px 4px 2px rgba(71, 89, 160, 0.8)
+                , 0px 0px 3px 2px rgba(71, 89, 160, 0.8);
+}
+
+.t-checked {
+    /* background-color:  rgb(44, 71, 54); */
+}
+
+.t-stone {
+    background-image: url( /assets/stone.svg );
+    scale: 1.2;
+    padding-bottom: 10px;
+    z-index:20;
+    position: relative;
+    height: 100%;
+    transform-style: preserve-3d;
+}
+
+.t-flag {
+    position: relative;
+    z-index: 20;
+    height: 100%;
+    background-image: url( /assets/flag.svg );
+
+    scale: 1.5;
+    margin-bottom: 2px;
+    margin-right: 2px;
+    filter: contrast(1.2);
+} 
+
+
+.t-gem {
+    z-index:20;
+    position: relative;
+    height: 100%;
+    /* box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.6); */
+	transform: translatey(0px);
+	animation: float 6s ease-in-out infinite;
+
+    padding-bottom: 10px;
+    transform-style: preserve-3d;
+}
+
+.t-tile:has(.t-gem):hover {
+    box-shadow: inset 0px 0px 4px 2px rgba(241, 161, 80, 0.8)
+                , 0px 0px 3px 2px rgba(241, 161, 80, 0.8);
+}
+
+.t-gem:hover {
+ 
+    transition-delay: 0.6s;
+    filter:contrast(1.4);
+/* 
+    pointer-events:  unset ;
+    user-select: none !important ; */
+}
+
+
+.t-tile:has(.t-gem)::after ,
+.t-tile:has(.t-stone)::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    min-width: 33px;
+    min-height: 100%;
+    background: #272727;
+    opacity: 0.7;
+    filter: blur(4px);
+    transform: scale(1, 0.7);
+    z-index: 10;
+    top: 2px;
+    margin-left: 2px;
+}
+
+.t-tile:has(.t-flag)::after{
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    min-width: 20px;
+    min-height: 100%;
+    background: #272727;
+    opacity: 0.7;
+    filter: blur(4px);
+    transform: scale(1, 0.7);
+    z-index: 10;
+    top: 2px;
+    margin-left: 8px;
+}
+
+@keyframes float {
+    0% {
+        transform: translatey(0px);
+        /* rotate: 1deg; */
+	}
+	50% {
+		transform: translatey(-1px);
+        /* rotate: -2deg; */
+	}
+	100% {
+        transform: translatey(0px);
+        /* rotate: 1deg; */
+	}
+}
+
+.t-1-topaz, .t-2-topaz, .t-3-topaz, .t-4-topaz, .t-5-topaz, .t-6-topaz {
+    background-image: url( /assets/topaz.svg );
+}
+
+.t-1-opal, .t-2-opal, .t-3-opal, .t-4-opal, .t-5-opal, .t-6-opal{
+    background-image: url( /assets/opal.svg );
+}
+
+.t-1-emerald, .t-2-emerald, .t-3-emerald, .t-4-emerald, .t-5-emerald, .t-6-emerald {
+    background-image: url( /assets/emerald.svg );
+}
+
+.t-1-sapphire, .t-2-sapphire, .t-3-sapphire, .t-4-sapphire, .t-5-sapphire, .t-6-sapphire {
+    background-image: url( /assets/sapphire.svg );
+}
+
+.t-1-ruby, .t-2-ruby, .t-3-ruby, .t-4-ruby, .t-5-ruby, .t-6-ruby  {
+    background-image: url( /assets/ruby.svg );
+}
+
+.t-1-diamond, .t-2-diamond, .t-3-diamond, .t-4-diamond, .t-5-diamond, .t-6-diamond {
+    
+    background-image: url( /assets/diamond.svg);
+}
+
+.t-1-amethyst, .t-2-amethyst, .t-3-amethyst, .t-4-amethyst, .t-5-amethyst, .t-6-amethyst {
+    background-image: url( /assets/amethyst.svg );
+}
+
+.t-1-aquamarine, .t-2-aquamarine, .t-3-aquamarine, .t-4-aquamarine, .t-5-aquamarine, .t-6-aquamarine{
+    background-image: url( /assets/aquamarine.svg );
+}
+
+.t-s-1 {
+    scale: 1.3;
+}
+
+.t-s-2 {
+    scale: 1.6;
+}
+.t-s-3 {
+    scale: 1.9;
+}
+
+.t-s-4 {
+    scale: 2.7;
+}
+
+.t-s-5 {
+    scale: 3.4;
+}
+
+.t-s-6{
+    scale: 4;
+}
+
+
+/* 
+.t-i{
+    background-image: url( /assets/casilla-i.svg );
+} */
+
+.t-start, .t-resume, .t-ps-toggle {
+    height: 70px;
+    margin-top: 50px;
+    width: 180px;
+    margin-left: 1200px;
+    z-index: 30;
+}
+
+.t-pause {
+    width: 80px;
+    height: 50px;
+    margin-left: 500px;
+    z-index: 30;
+    margin-top: 20px;
+}
+
+.t-slider {
+    margin-left: 1200px;
+}
+
+
+.t-info {
+    overflow:visible;
+    background:none !important;
+    position: relative;
+
+    left: 1300px;
+}
+
+.t-graph {
+    visibility: hidden;
+}
+
+.t-path {
+    position: absolute;
+    scale: 1;
+    width: 10px;
+    height: 10px;
+    z-index: 100;
+    background-color: chocolate;
+    border-radius: 100%;
+}
+
+.g-e-enemy {
+    font-size: 10px;
+    position: absolute;
+
+    z-index: 20;
+
+    height: 20px;
+    width: 20px;
+
+    scale: 1.5;
+    margin-bottom: 2px;
+    margin-right: 2px;
+    filter: contrast(1.2);
+    background-repeat: no-repeat;
+    background-image: url(/assets/flag.svg);
+}
+
+"""
+        ]

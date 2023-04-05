@@ -9,6 +9,7 @@ import Keyboard.Key as Key
 import Debug exposing (toString)
 import Browser
 import Browser.Events exposing (onKeyDown)
+import Browser.Dom
 import Json.Decode as Json
 import Process
 import Task
@@ -31,6 +32,11 @@ type alias Stats =
     }
 
 
+type alias Window =
+    { width : Int
+    , height : Int
+    }
+
 type alias Model =
     {   
         points: Int
@@ -38,6 +44,7 @@ type alias Model =
       , pausedState : GameState
       , state: GameState
       , modelTablero : Tablero.Model
+      , window : Window
     }
 
 
@@ -52,21 +59,21 @@ type Msg =
     | TableroMsg Tablero.Msg 
     -- Test
     | LevelChange String
+    | WindowSize Int Int
 
 
-init : ( Model, Cmd Msg )
+init : Model
 init =
     let 
         tablero = Tablero.init 37 37
     in 
-    ( {   points = 0
+        {   points = 0
         , modelTablero = tablero
         , pausedState = NotStarted
         , state = NotStarted
         , stepTime = 1000.0
-      }
-    , Cmd.none
-    )
+        , window = { width = 800, height = 500 }
+        }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -132,17 +139,21 @@ delay time msg =
            Task.perform identity
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Document Msg
 view model =
-    Html.main_
-        [Attrs.id "gemtd"]
-        <| 
-            [ viewStartButton model.state
-            , viewPauseButton model.state
-            , Tablero.view model.modelTablero |> Html.map TableroMsg
-            , viewDeveloperTools model
-            , div [Attrs.class "t-slider"] [viewDeveloperTools model]
-            ]
+    { title = "Mario - Elm Animator"
+    , body = 
+        [ stylesheet
+        , Html.div
+        Html.main_
+            [Attrs.id "gemtd"]
+            <| 
+                [ viewStartButton model.state
+                , viewPauseButton model.state
+                , Tablero.view model.modelTablero |> Html.map TableroMsg
+                , viewDeveloperTools model
+                , div [Attrs.class "t-slider"] [viewDeveloperTools model]
+                ]
 
 viewDeveloperTools : Model -> Html Msg 
 viewDeveloperTools model = 
@@ -192,10 +203,33 @@ subscriptions model =
 
 main : Program () Model Msg
 main =
-    Browser.element
-        { init = always init
+    Browser.document
+        { init =
+            \() ->
+                ( init
+                , Browser.Dom.getViewport
+                    |> Task.attempt
+                        (\viewportResult ->
+                            case viewportResult of
+                                Ok viewport ->
+                                    WindowSize
+                                        (round viewport.scene.width)
+                                        (round viewport.scene.height)
+
+                                Err err ->
+                                    WindowSize
+                                        (round 800)
+                                        (round 600)
+                        )
+                )
         , view = view
         , update = update
         , subscriptions = subscriptions
         }
+    -- Browser.element
+    --     { init = always init
+    --     , view = view
+    --     , update = update
+    --     , subscriptions = subscriptions
+    --     }
         
